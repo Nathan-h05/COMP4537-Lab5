@@ -15,20 +15,26 @@ exports.post = (req, res) => {
     }
 
     let data = '';
-    
+
     // Collect the data from the request body
     req.on('data', chunk => {
         data += chunk;
     });
 
-    // When all data has been received
     req.on('end', () => {
         try {
             const jsonData = JSON.parse(data);
-            // Insert data into the 'patient' table
-            const { name, DateOfBirth } = jsonData;
-            const insertQuery = `INSERT INTO patient (name, DateOfBirth) VALUES (?, ?)`;
-            connection.query(insertQuery, [name, DateOfBirth], (err, result) => {
+
+            // Ensure the SQL query is an INSERT statement
+            const { sql } = jsonData;
+            if (!sql || sql.trim().toUpperCase().indexOf('INSERT') !== 0) {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ message: 'Only SELECT or INSERT queries are allowed' }));
+                return;
+            }
+
+            // Execute the INSERT query
+            connection.query(sql, (err, result) => {
                 if (err) {
                     res.writeHead(500, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ message: 'Error inserting data', error: err }));
@@ -39,7 +45,7 @@ exports.post = (req, res) => {
             });
         } catch (error) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'Invalid data format', error }));
+            res.end(JSON.stringify({ message: 'Invalid JSON format', error }));
         }
     });
 };

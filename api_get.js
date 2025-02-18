@@ -21,7 +21,7 @@ exports.get = (req, res) => {
     const trimmedQuery = sqlQuery.trim().toUpperCase();
     if (!trimmedQuery.startsWith('SELECT')) {
         res.writeHead(403, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: 'Only SELECT queries are allowed' }));
+        res.end(JSON.stringify({ message: 'Only SELECT or INSERT queries are allowed' }));
         return;
     }
 

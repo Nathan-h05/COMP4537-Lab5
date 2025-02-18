@@ -4,7 +4,7 @@ const { get } = require('./api_get.js');
 
 function addCorsHeaders(res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization'); // remove causes CORS
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
 exports.lab5_activate = (req, res) => {
