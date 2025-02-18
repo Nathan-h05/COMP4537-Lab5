@@ -1,4 +1,6 @@
-const connection = require('./db'); // Import the MySQL connection
+// Chatgpt was used in creation of the code
+
+const { connection, ensurePatientTableExists } = require('./db');
 
 exports.post = (req, res) => {
     let path = req.url;
@@ -21,6 +23,7 @@ exports.post = (req, res) => {
         data += chunk;
     });
 
+    // When all data has been received
     req.on('end', () => {
         try {
             const jsonData = JSON.parse(data);
@@ -29,24 +32,32 @@ exports.post = (req, res) => {
             const { sql } = jsonData;
             if (!sql || sql.trim().toUpperCase().indexOf('INSERT') !== 0) {
                 res.writeHead(403, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ message: 'Only SELECT or INSERT queries are allowed' }));
+                res.end(JSON.stringify({ message: 'Only INSERT queries are allowed' }));
                 return;
             }
 
-            // Execute the INSERT query
-            connection.query(sql, (err, result) => {
+            // Ensure the patient table exists
+            ensurePatientTableExists(err => {
                 if (err) {
                     res.writeHead(500, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ message: 'Error inserting data', error: err }));
+                    res.end(JSON.stringify({ message: 'Error creating table', error: err }));
                     return;
                 }
-                res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ message: 'Data inserted successfully', patientid: result.insertId }));
+
+                // Execute the INSERT query
+                connection.query(sql, (err, result) => {
+                    if (err) {
+                        res.writeHead(500, { 'Content-Type': 'application/json' });
+                        res.end(JSON.stringify({ message: 'Error inserting data', error: err }));
+                        return;
+                    }
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ message: 'Data inserted successfully', patientid: result.insertId }));
+                });
             });
         } catch (error) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'Invalid JSON format', error }));
+            res.end(JSON.stringify({ message: 'Invalid data format', error }));
         }
     });
 };
-

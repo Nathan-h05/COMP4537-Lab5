@@ -1,4 +1,6 @@
-const connection = require('./db'); // Import the MySQL connection
+// Chatgpt was used in creation of the code
+
+const { connection, ensurePatientTableExists } = require('./db');
 
 exports.get = (req, res) => {
     let path = req.url;
@@ -25,16 +27,25 @@ exports.get = (req, res) => {
         return;
     }
 
-    // Execute the SELECT query
-    connection.query(sqlQuery, (err, results) => {
+    // Check if the patient table exists/create it if not
+    ensurePatientTableExists(err => {
         if (err) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ message: 'Error fetching data', error: err }));
+            res.end(JSON.stringify({ message: 'Error creating table', error: err }));
             return;
         }
 
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ message: 'Data fetched successfully', data: results }));
+        // Execute the SELECT query
+        connection.query(sqlQuery, (err, results) => {
+            if (err) {
+                res.writeHead(500, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ message: 'Error fetching data', error: err }));
+                return;
+            }
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ message: 'Data fetched successfully', data: results }));
+        });
     });
 };
 

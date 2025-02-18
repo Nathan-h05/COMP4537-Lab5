@@ -1,11 +1,13 @@
+// Chatgpt was used in creation of the code
+
 const mysql = require('mysql2');
 
 // Create a connection to the database
 const connection = mysql.createConnection({
-    host: 'localhost', // or your specific host
-    user: 'root', // your MySQL username
-    password: 'password', // your MySQL password
-    database: 'lab5_db' // the database you want to connect to
+    host: 'localhost', 
+    user: 'root', 
+    password: 'password',
+    database: 'lab5_db' 
 });
 
 connection.connect(err => {
@@ -14,8 +16,10 @@ connection.connect(err => {
         return;
     }
     console.log('Connected to the database!');
-    
-    // Check if 'patient' table exists and create it if not
+});
+
+// check if the patient table exists and create it if not
+function ensurePatientTableExists(callback) {
     const createTableQuery = `
         CREATE TABLE IF NOT EXISTS patient (
             patientid INT(11) AUTO_INCREMENT PRIMARY KEY,
@@ -24,13 +28,13 @@ connection.connect(err => {
         ) ENGINE=InnoDB;
     `;
 
-    connection.query(createTableQuery, (err, result) => {
-        if (err) {
-            console.error('Error creating table: ', err);
-        } else {
-            console.log('Checked or created patient table');
-        }
+    connection.query(createTableQuery, (err) => {
+        callback(err);
     });
-});
+    console.log('Checked or created patient table');
+}
 
-module.exports = connection; // Export the connection to use in other parts of your app
+module.exports = {
+    connection,
+    ensurePatientTableExists
+};
